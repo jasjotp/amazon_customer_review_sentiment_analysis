@@ -2,7 +2,13 @@ import sqlite3
 import pandas as pd 
 import matplotlib.pyplot as plt
 import os
+from nltk.corpus import stopwords
+from wordcloud import WordCloud
+import nltk
 
+nltk.download('stopwords')
+stop_words = set(stopwords.words('english'))
+                 
 def load_data(database_path):
     """
     Connects to a SQLite database and automatically loads the table
@@ -74,3 +80,48 @@ def plot_bar_with_annotations(data, title, xlabel, ylabel, rotation = 0, save_pa
         print(f'Plot saved to {save_path}')
     plt.close()
 
+# function to clean text for a specific score of reviews to get wordclouds of high and low scored reviews to find their top words 
+def get_clean_text(df, score):
+    '''
+    Filters reviews by score and returns cleaned, lowercase review text
+
+    Parameters:
+     df (DataFrame): input DataFrame containing a 'Score' and 'Text' column
+     score (int): review score to filter on (e.g., 1 or 5)
+
+    Returns:
+     str: cleaned string of all words in the selected reviews, with stopwords and non-alphabetic words removed
+    '''
+    text = " ".join(df[df['Score'] == score]['Text'].astype(str).tolist()).lower()
+    tokens = [word for word in text.split() if word.isalpha() and word not in stop_words]
+    return tokens
+
+def generate_wordcloud_from_tokens(tokens, title, wordcount, save_path = None, colormap = 'viridis'):
+    '''
+    Generates and saves a word cloud from a list of tokens
+
+    Parameters:
+     tokens (list): list of cleaned, lowercase words to include in the word cloud
+     title (str): title displayed above the word cloud plot
+     wordcount (int): maxinum number of words to display
+     save_path (str): path to save the generated word cloud image (optional)
+     colormap (str): color scheme used in the word cloud (default is 'viridis')
+
+    Returns:
+     None 
+    '''
+
+    text = ' '.join(tokens)
+    wordcloud = WordCloud(width = 800, height = 400, background_color = 'white', colormap = colormap, max_words = wordcount, scale = 3, random_state = 42).generate(text)
+
+    plt.figure(figsize = (10, 5))
+    plt.imshow(wordcloud, interpolation = 'bilinear')  
+    plt.axis('off')
+    plt.title(title, fontsize = 16)
+    plt.tight_layout()
+
+    # try to save the wordcloud 
+    if save_path:
+        plt.savefig(save_path)
+        print(f'Word Cloud saved to {save_path}')
+    plt.close()

@@ -2,8 +2,15 @@ import pandas as pd
 import numpy as np 
 import os 
 import matplotlib.pyplot as plt
+import seaborn as sns
+import nltk 
+from nltk.corpus import stopwords 
+from nltk.tokenize import word_tokenize
+from collections import Counter
+from wordcloud import WordCloud
+import string
 
-from helpers import load_data, plot_bar_with_annotations
+from helpers import load_data, plot_bar_with_annotations, get_clean_text, generate_wordcloud_from_tokens
 
 # define your directory where the data and database is before reading in the full dataabse path with the load_data helper funcction 
 database_path = r'data\database.sqlite'
@@ -125,17 +132,97 @@ avg_quarterly_score_path = os.path.join(graphs_dir, 'avg_quarterly_review_score.
 plt.savefig(avg_quarterly_score_path)
 
 # find the most common words that show up in the body (text) of the review 
+# try to already find the unkt and stopwords packages to avoid repeated downloads
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
+
+# combine all reviews into one string and tokenize them
+all_text = " ".join(df['Text'].astype(str).tolist())
+tokens = word_tokenize(all_text.lower(), preserve_line = True)
+
+# remove puntuation and stop words 
+stop_words = set(stopwords.words('english'))
+tokens = [word for word in tokens if word.isalpha() and word not in stop_words]
+
+# count word frequencies 
+word_freq = Counter(tokens)
+
+# get top 20 most common words 
+top20_most_common_words = word_freq.most_common(20)
+
+for word, freq in top20_most_common_words:
+    print(f'{word}: {freq}')
+
+# plot the top 20 words that show up in the reviews 
+top_words_df = pd.DataFrame(top20_most_common_words, columns = ['Word', 'Frequency'])
+
+# convert the top words to a series with word as the index (since function expects a series with word as index and freq as value)
+top_words_series = top_words_df.set_index('Word')['Frequency']
+
+# set the bar colour to orange to match Amazon colours
+plt.rcParams['axes.prop_cycle'] = plt.cycler(color=['#FF9900'])
+
+# plot the top 20 words using helper function 
+plot_bar_with_annotations(
+    data=top_words_series,
+    title='Top 20 Most Common Words in Review Text',
+    xlabel='Word',
+    ylabel='Frequency',
+    rotation=45,
+    save_path=os.path.join(graphs_dir, 'top20_common_words.png'),
+    figsize=(10, 6)
+)
 
 # find top words in 5-star reviews by making a word cloud 
+tokens_5_star_reviews = get_clean_text(df, 5)
+generate_wordcloud_from_tokens(tokens = tokens_5_star_reviews, 
+                               title = "Top Words in 5-Star Reviews", 
+                               wordcount = 100,
+                               save_path = os.path.join(graphs_dir, 'wordcloud_5_star.png'))
 
 # find the top words in 1-star reviews by making a word cloud 
+tokens_1_star_reviews = get_clean_text(df, 1)
+generate_wordcloud_from_tokens(tokens = tokens_1_star_reviews, 
+                               title = "Top Words in 1-Star Reviews", 
+                               wordcount = 100,
+                               save_path = os.path.join(graphs_dir, 'wordcloud_1_star.png'))
 
-# see if helpfulness score correlates with score - are helpful reviews usually more positive?
+# see the average helpfulness ratio across different scores (boxplot)
+df['HelpfulnessRatio'] = df['HelpfulnessNumerator'] / df['HelpfulnessDenominator'].replace(0, np.nan)
 
-# see the helpfulness ratio across different scores (boxplot)
+# drop rows with NaN helpfulness ratio (from 0 denominator)
+plot_df = df.dropna(subset = ['HelpfulnessRatio'])
 
-# see if the score distribution and the review (text) length or word count are correlated with higher scores - check if review lwngth varies by score
+# create boxplot
+plt.figure(figsize = (10, 8))
+sns.boxplot(data = plot_df, x = 'Score', y = 'HelpfulnessRatio', palette = 'viridis', hue = 'Score', legend = False)
 
-# check for duplicate reviews using ProductID, UserId, ProfileName, Score and very similar times 
+plt.title('Helpfulness Ratio by Review Score')
+plt.xlabel('Review Score')
+plt.ylabel('Helpfulness Ratio (Numerator / Denominator)')
+plt.tight_layout()
 
-# try to detect spammy users (many reviews in a short period of time or very similar reviews)
+helpfulness_boxplot_path = os.path.join(graphs_dir, 'helpfulness_ratio_by_score_boxplot.png')
+plt.savefig(helpfulness_boxplot_path)
+
+# plot a heatmap to see if helpfulness score correlates with score and to see if the score distribution and the review (text) length/word count are correlated with higher scores 
+df['ReviewLength'] = df['Text'].astype(str).apply(len) # number of characters 
+df['WordCount'] = df['Text'].astype(str).apply(lambda x: len(x.split()))
+
+numeric_features = df[['Score', 'HelpfulnessNumerator', 'HelpfulnessDenominator', 
+                       'HelpfulnessRatio', 'ReviewLength', 'WordCount', 'Month']]
+
+plt.figure(figsize = (12, 10))
+sns.heatmap(numeric_features.corr(), annot = True, cmap = 'coolwarm', fmt = '.2f')
+plt.title('Correlation Heatmap for Numerical Features')
+plt.tight_layout()
+
+heatmap_path = os.path.join(graphs_dir, 'correlation_heatmap.png')
+plt.savefig(heatmap_path)
