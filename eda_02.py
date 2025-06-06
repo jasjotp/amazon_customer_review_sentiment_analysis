@@ -3,7 +3,7 @@ import numpy as np
 import os 
 import matplotlib.pyplot as plt
 
-from helpers import load_data
+from helpers import load_data, plot_bar_with_annotations
 
 # define your directory where the data and database is before reading in the full dataabse path with the load_data helper funcction 
 database_path = r'data\database.sqlite'
@@ -20,60 +20,75 @@ print(df['Score'].describe(include = 'all')) # min score of 1 and max score of 5
 # check how many times each score occurs 
 print(df['Score'].value_counts().sort_index(ascending = False))
 
-# plot how many times each score occurs in all the reviews 
-plt.figure(figsize=(10, 8))
-ax1 = df['Score'].value_counts().sort_index(ascending = False) \
-    .plot(kind = 'bar')
-ax1.set_title('Count of Reviews by Star')
-ax1.set_xlabel('Review Stars')
-ax1.set_ylabel('Count')
-plt.xticks(rotation = 0)
-
-# add value labels on top of the bars 
-for bar in ax1.patches:
-    ax1.annotate(f'{int(bar.get_height())}',
-                 (bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1),
-                 ha='center', va='bottom', fontsize=10)
-
 # create graphs directory if it doesn't exist to save the graphs in 
 graphs_dir = 'graphs'
 os.makedirs(graphs_dir, exist_ok = True)
 
-# save the plot in the graphs directory 
-star_count_path = os.path.join(graphs_dir, 'reviews_star_distribution.png')
-plt.tight_layout
-plt.savefig(star_count_path)
-print(f'Plot saved to {star_count_path}')
+# plot how many times each score occurs in all the reviews 
+plot_bar_with_annotations(data = df['Score'].value_counts().sort_index(ascending = False),
+                          title = 'Count of Reviews by Star', 
+                          xlabel = 'Review Stars', 
+                          ylabel = 'Count',
+                          save_path = os.path.join(graphs_dir, 'reviews_star_distribution.png'))
 
 # plot the top 15 most common product ids 
-plt.figure(figsize=(10, 8))
 top_15_products = df['ProductId'].value_counts().nlargest(15)
 
-ax2 = top_15_products.plot(
-    kind='bar'
-)
-ax2.set_title('Count of Top 15 Most Reviewed Product IDs')
-ax2.set_xlabel('Product ID')
-ax2.set_ylabel('Review Count')
-plt.xticks(rotation=45, ha='right')
+plot_bar_with_annotations(data = top_15_products,
+                          title = 'Count of Top 15 Most Reviewed Product IDs', 
+                          xlabel = 'Product ID', 
+                          ylabel = 'Review Count',
+                          rotation = 45,
+                          save_path = os.path.join(graphs_dir, 'top15_reviewed_products.png'))
 
-# annotate the bars 
-for bar in ax2.patches:
-    ax2.annotate(f'{int(bar.get_height())}',
-                 (bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1),
-                 ha='center', va='bottom', fontsize=10)
+# plot the top 15 most frequent UserId and ProfileNames 
+top15_users = df[['UserId', 'ProfileName']].value_counts().nlargest(15)
 
-# save the plot 
-top15_product_path = os.path.join(graphs_dir, 'top15_reviewed_products.png')
-plt.tight_layout()
-plt.savefig(top15_product_path)
-print(f'Plot saved to {top15_product_path}')
+plot_bar_with_annotations(data = top15_users,
+                          title = 'Top 15 Users and Profile Names by Review Count', 
+                          xlabel = 'User ID and ProfileName', 
+                          ylabel = 'Review Count',
+                          rotation = 45,
+                          save_path = os.path.join(graphs_dir, 'top15_users_profiles_review_count.png'))
 
-# plot the top 10 most frequent UserId and ProfileNames 
+# find the most common years, months, and days of the week the reviews are posted at 
 
-# find the most common hours the reviews are posted at 
+# convert the time from a unix timestamp (default is in nanoseconds) to a datetime format (convert unix timestamp into a date format (seconds))
+df['Time'] = pd.to_datetime(df['Time'], unit = 's')
 
-# plot a trendline of the average score of reviews over time
+df['Year'] = df['Time'].dt.year
+print(df['Year'].value_counts())
+
+# plot how many reviews occur in each year 
+plot_bar_with_annotations(data = df['Year'].value_counts().sort_index(ascending = False),
+                          title = 'Count of Reviews by Year', 
+                          xlabel = 'Year', 
+                          ylabel = 'Count',
+                          save_path = os.path.join(graphs_dir, 'year_distribution.png'))
+
+df['Month'] = df['Time'].dt.month
+print(df['Month'].value_counts())
+
+# plot how many reviews occur in each month 
+plot_bar_with_annotations(data = df['Month'].value_counts(),
+                          title = 'Count of Reviews by Month', 
+                          xlabel = 'Month', 
+                          ylabel = 'Count',
+                          save_path = os.path.join(graphs_dir, 'month_distribution.png'))
+
+df['DayOfWeek'] = df['Time'].dt.day_name()
+print(df['DayOfWeek'].value_counts())
+
+# plot how many reviews occur on each day of the week 
+plot_bar_with_annotations(data = df['DayOfWeek'].value_counts(),
+                          title = 'Count of Reviews by Day of the Week', 
+                          xlabel = 'Day of the Week', 
+                          ylabel = 'Count',
+                          save_path = os.path.join(graphs_dir, 'dayOfWeek_distribution.png'))
+
+# plot a trendline of the average score of reviews over time (quarterly trend)
+
+# create a quarter column
 
 # find the most common words that show up in the body (text) of the review 
 
