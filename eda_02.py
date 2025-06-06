@@ -89,6 +89,7 @@ plot_bar_with_annotations(data = df['DayOfWeek'].value_counts(),
 # plot a trendline of the average score of reviews over time (quarterly trend)
 
 # create a quarter column
+df['Quarter'] = df['Time'].dt.to_period('Q')
 
 # find the most common words that show up in the body (text) of the review 
 
