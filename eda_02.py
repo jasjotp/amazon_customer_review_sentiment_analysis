@@ -86,10 +86,43 @@ plot_bar_with_annotations(data = df['DayOfWeek'].value_counts(),
                           ylabel = 'Count',
                           save_path = os.path.join(graphs_dir, 'dayOfWeek_distribution.png'))
 
-# plot a trendline of the average score of reviews over time (quarterly trend)
+# plot a trendline of the average score of reviews over time (quarterly trend) and forecas
 
 # create a quarter column
 df['Quarter'] = df['Time'].dt.to_period('Q')
+
+# format the quarter as Year Qx 
+df['Quarter'] = df['Quarter'].apply(lambda x: f'{x.year} Q{x.quarter}')
+
+# calculat the average score per quarter/year
+avg_score_per_quarter = df.groupby('Quarter')['Score'].mean().reset_index()
+
+# create a nuemric x axis to plot the trend line 
+avg_score_per_quarter['QuarterIndex'] = np.arange(len(avg_score_per_quarter)) 
+
+# fit the trendline using linear regression (y = mx + b - 1st polynomial) to find the best fitting line for each point using the least squares method
+z = np.polyfit(avg_score_per_quarter['QuarterIndex'], avg_score_per_quarter['Score'], 1)
+p = np.poly1d(z) # turn (x, y, degree) into a a1 polynomial 
+
+# generate the trend line values 
+trendline = p(avg_score_per_quarter['QuarterIndex'])
+
+# plot the actual scores 
+plt.figure(figsize = (12, 6))
+plt.plot(avg_score_per_quarter['Quarter'], avg_score_per_quarter['Score'], marker = 'o', label = 'Actual')
+
+# plot trendline for each quarter 
+plt.plot(avg_score_per_quarter['Quarter'], trendline, linestyle = '--', color = 'red', label = 'Trendline')
+
+plt.xticks(rotation = 45, ha = 'right')
+plt.xlabel('Quarter/Year')
+plt.ylabel('Average Score')
+plt.title('Average Review Score by Quarter/Year')
+plt.tight_layout()
+plt.grid(True)
+
+avg_quarterly_score_path = os.path.join(graphs_dir, 'avg_quarterly_review_score.png')
+plt.savefig(avg_quarterly_score_path)
 
 # find the most common words that show up in the body (text) of the review 
 
