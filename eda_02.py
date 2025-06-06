@@ -132,7 +132,7 @@ avg_quarterly_score_path = os.path.join(graphs_dir, 'avg_quarterly_review_score.
 plt.savefig(avg_quarterly_score_path)
 
 # find the most common words that show up in the body (text) of the review 
-# try to already find the unkt and stopwords packages to avoid repeated downloads
+# try to already find the punkt and stopwords packages to avoid repeated downloads
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:

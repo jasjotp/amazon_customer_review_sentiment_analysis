@@ -125,3 +125,22 @@ def generate_wordcloud_from_tokens(tokens, title, wordcount, save_path = None, c
         plt.savefig(save_path)
         print(f'Word Cloud saved to {save_path}')
     plt.close()
+
+def ensure_nltk_resource(resource_name, download_name=None):
+    '''
+    Ensures that the specified NLTK resource is available. If not found, it downloads the resource.
+
+    Parameters:
+     resource_name (str): Path to the NLTK resource (e.g., 'tokenizers/punkt' or 'corpora/stopwords')
+     download_name (str): Optional specific name to download using nltk.download(). 
+                          If not provided, the function uses the last part of resource_name.
+
+    Returns:
+     None
+     '''
+
+    try:
+        nltk.data.find(resource_name)
+    except LookupError:
+        print(f"{resource_name} not found. Downloading...")
+        nltk.download(download_name or resource_name.split('/')[-1])
