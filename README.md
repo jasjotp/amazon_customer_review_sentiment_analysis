@@ -16,9 +16,8 @@ This project performs in-depth EDA and sentiment analysis on Amazon customer rev
 ## Key Insights & Findings
 
 ### 1. Review Distribution & Patterns
-
-![VADER Review Star Distribution](graphs\vader_sentiment_per_rating.png)
-![DistilBERT Review Star Distribution](graphs\distilbert_sentiment_per_rating.png)
+![VADER Review Star Distribution](graphs/vader_sentiment_per_rating.png)
+![DistilBERT Review Star Distribution](graphs/distilbert_sentiment_per_rating.png)
 
 **Key Finding**: 78% of reviews are 4-5 stars, indicating generally positive customer sentiment with potential selection bias toward satisfied customers in the dataset.
 
