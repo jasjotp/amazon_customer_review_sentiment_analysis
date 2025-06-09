@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os 
+from scipy.stats import pearsonr
 
 # load preprocessed reviews with VADER sentiment scores
 vader_df = pd.read_csv('reviews_with_VADER_sentiment.csv')
@@ -145,6 +146,8 @@ combined_df['sentiment_agreement'] = np.where(
     'Agree', 
     'Disagree'
 )
+
+# plot the scatter plot of the vader and distilbert sentiment scores on opposite axes
 plt.subplot(1, 2, 2)
 sns.scatterplot(
     data = combined_df,
@@ -155,6 +158,18 @@ sns.scatterplot(
     alpha = 0.5
 )
 
+
+# also calculate the pearson correlation coeficcient to add as an annotation in the scatter plot 
+r, _ = pearsonr(combined_df['compound'], combined_df['distil_compound_score'])
+print(f'Pearson Correlation Coeficcient Between VADER and DistilBERT sentiment scores: {r:.2f}')
+
+# add the Pearson Correlation Coeficcient annotation
+plt.annotate(f"Pearson r = {r:.2f}", 
+             xy = (0.05, 0.9),                # relative position in axes coords
+             xycoords = 'axes fraction',     # interpret as fraction of axes (0 to 1)
+             fontsize = 12,
+             bbox = dict(boxstyle = "round,pad=0.3", fc = "lightyellow", ec = "gray", lw = 1))
+
 plt.title('VADER vs DistilBERT Compound Scores')
 plt.xlabel('VADER Compound Score')
 plt.ylabel('DistilBERT Compound Score')
@@ -164,8 +179,58 @@ lims = [-1, 1]
 plt.plot(lims, lims, 'k--', linewidth=1)
 
 vader_distilbert_path = os.path.join('graphs', 'comparison_vader_distilbert_sentiment.png')
-
 plt.tight_layout()
 plt.savefig(vader_distilbert_path) 
 
 # find the top disagreements between each model, to see where VADER (NLTK) and transformer models differ the most
+combined_df['diff'] = np.abs(combined_df['compound'] - combined_df['distil_compound_score'])
+top_disagreements = combined_df.sort_values('diff', ascending = False).head(10)
+
+# find the summaries of the reviews of the top_diagreements 
+labels = top_disagreements['Summary']
+
+vader_scores = top_disagreements['compound'].round(3)
+distilbert_scores = top_disagreements['distil_compound_score'].round(3)
+
+# create a table plot with the summary, and vader and distilbert score
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.axis('off')  # hide plot axes
+
+# create table data
+table_data = [
+    [label, vader, distil] for label, vader, distil in zip(labels, vader_scores, distilbert_scores)
+]
+
+# add a table plot
+table = ax.table(
+    cellText = table_data,
+    colLabels = ["Text", "VADER Compound", "DistilBERT Compound"],
+    colColours = ["#f2f2f2", "#d0e1f9", "#f9d0d0"], # got colour codes from: https://www.w3schools.com/colors/colors_picker.asp
+    loc = 'center',
+    cellLoc = 'center'
+)
+
+# set the fontsize and title
+table.auto_set_font_size(False)
+table.set_fontsize(7)
+table.scale(1.2, 1.2)
+
+plt.title("Top 10 Sentiment Disagreements: VADER vs. DistilBERT", fontsize=12)
+plt.tight_layout()
+
+top10_sentiment_disagreements_path = os.path.join('graphs', 'top10_sentiment_disagreements.png')
+plt.tight_layout()
+plt.savefig(top10_sentiment_disagreements_path) 
+
+# create a confusion matrix to see how often both models assign the same label 
+# create labels so vader is positive if compound score is >-= 0.05, negative if compound score is <= -0.05, and neutral otherwise, since the compound scores are from -1 to 1, with -1 indicating low sentiment and 1 indicating very positive sentiment
+combined_df['vader_label'] = combined_df['compound'].apply(lambda x: 'positive' if x >= 0.05 else 'negative' if x <= -0.05 else 'neutral')
+combined_df['distilbert_label'] = combined_df['distil_compound_score'].apply(lambda x: 'positive' if x > 0 else 'negative')
+
+# create a confusion matrix to see how many labels from VADER and DistilBERT match 
+confusion_matrix = pd.crosstab(combined_df['vader_label'], combined_df['distilbert_label'])
+
+plt.figure(figsize = (10, 6))
+sns.heatmap(confusion_matrix, annot = True, fmt = 'd', cmap = 'Blues')
+plt.title('VADER vs DistilBERT Sentiment Label Agreement')
+plt.savefig(os.path.join('graphs', 'sentiment_label_agreement.png'))
