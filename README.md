@@ -16,6 +16,7 @@ This project performs in-depth EDA and sentiment analysis on Amazon customer rev
 ## Key Insights & Findings
 
 ### 1. Review Distribution & Patterns
+![Distribution of Rrviews](graphs/reviews_star_distribution.png)
 ![VADER Review Star Distribution](graphs/vader_sentiment_per_rating.png)
 ![DistilBERT Review Star Distribution](graphs/distilbert_sentiment_per_rating.png)
 
