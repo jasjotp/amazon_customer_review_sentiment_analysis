@@ -148,7 +148,7 @@ pip install pandas numpy matplotlib seaborn nltk transformers torch scipy scikit
 - **Features**: ProductId, UserId, Score, Summary, Text, HelpfulnessRatio, Timestamp
 - **Review Distribution**: 1★(52K), 2★(29K), 3★(42K), 4★(80K), 5★(364K)
 
-## 🔍 Business Applications
+## Business Applications
 
 ### For E-commerce Platforms
 - **Product Quality Monitoring**: Identify products with declining sentiment
@@ -176,6 +176,8 @@ pip install pandas numpy matplotlib seaborn nltk transformers torch scipy scikit
 
 ---
 
-**Contact**: jasjotparmar14@gmail.com | **💼 LinkedIn**: https://www.linkedin.com/in/jasjotparmar/ | **🐙 GitHub**: https://github.com/jasjotp
+**Contact**: jasjotparmar14@gmail.com  <br>
+**LinkedIn**: https://www.linkedin.com/in/jasjotparmar/  <br>
+**GitHub**: https://github.com/jasjotp
 
 *This project demonstrates advanced NLP techniques, large-scale data processing, and comparative model analysis - showcasing skills in Python, machine learning, data visualization, and business intelligence.*
