@@ -147,6 +147,10 @@ combined_df['sentiment_agreement'] = np.where(
     'Disagree'
 )
 
+# print out the agreement percentage to see how many reviews both models agree on 
+agreement_percentage = (combined_df['sentiment_agreement'] == 'Agree').mean() * 100
+print(f'Agreement Percentage Between VADER and DistilBERT Models (+/- 0.15): {agreement_percentage:.3f}')
+
 # plot the scatter plot of the vader and distilbert sentiment scores on opposite axes
 plt.subplot(1, 2, 2)
 sns.scatterplot(
