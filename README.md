@@ -17,7 +17,8 @@ This project performs in-depth EDA and sentiment analysis on Amazon customer rev
 
 ### 1. Review Distribution & Patterns
 
-![Review Star Distribution](graphs/reviews_star_distribution.png)
+![VADER Review Star Distribution](graphs\vader_sentiment_per_rating.png)
+![DistilBERT Review Star Distribution](graphs\distilbert_sentiment_per_rating.png)
 
 **Key Finding**: 78% of reviews are 4-5 stars, indicating generally positive customer sentiment with potential selection bias toward satisfied customers in the dataset.
 
@@ -48,6 +49,8 @@ This project performs in-depth EDA and sentiment analysis on Amazon customer rev
 ### 5. Word Analysis Insights
 
 ![Top Common Words](graphs/top20_common_words.png)
+![5-Star Word Cloud](graphs/wordcloud_5_star.png)
+![1-Star Word Cloud](graphs/wordcloud_1_star.png)
 
 **Content Analysis**: Most frequent words relate to product quality ("good", "great", "love") and descriptive terms ("taste", "flavor", "product"), indicating reviews focus on attributes of the product itself instead of service issues.
 
